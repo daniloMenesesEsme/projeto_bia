@@ -10,3 +10,4 @@ python-dotenv
 pandas>=1.5.0
 gunicorn>=20.1.0
 beautifulsoup4
+PyJWT
