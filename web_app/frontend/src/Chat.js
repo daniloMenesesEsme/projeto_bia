@@ -88,6 +88,15 @@ function Chat({ username, token }) {
           currentBotMessage.text = `Erro: ${data.error}`;
           eventSource.close();
           setIsLoading(false);
+          
+          // Se for erro de token, sugerir recarregar página
+          if (data.error.includes('Token') || data.error.includes('login')) {
+            setTimeout(() => {
+              if (window.confirm("Sua sessão expirou. Deseja recarregar a página para fazer login novamente?")) {
+                window.location.reload();
+              }
+            }, 2000);
+          }
         } else {
           if (data.sources) currentBotMessage.sources = data.sources;
           if (data.token) {
@@ -114,6 +123,13 @@ function Chat({ username, token }) {
       });
       eventSource.close();
       setIsLoading(false);
+      
+      // Se o erro for de autenticação, sugerir novo login
+      if (err.target && err.target.readyState === EventSource.CLOSED) {
+        setTimeout(() => {
+          alert("Sua sessão pode ter expirado. Por favor, recarregue a página e faça login novamente.");
+        }, 2000);
+      }
     };
   };
 

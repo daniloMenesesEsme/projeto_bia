@@ -40,7 +40,7 @@ cors_origins = [
 
 CORS(app, origins=cors_origins, supports_credentials=True)
 
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma-chave-secreta-muito-forte')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma-chave-secreta-muito-forte-boticario-2024')
 
 # Headers de segurança
 @app.after_request
@@ -170,16 +170,21 @@ def chat():
         return Response(error_stream(), mimetype='text/event-stream')
     
     try:
+        print(f"🔍 Tentando decodificar token: {token[:50]}...")
+        print(f"🔑 SECRET_KEY sendo usada: {app.config['SECRET_KEY'][:10]}...")
         data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
         current_user = data['username']
-    except jwt.ExpiredSignatureError:
+        print(f"✅ Token válido para usuário: {current_user}")
+    except jwt.ExpiredSignatureError as e:
+        print(f"❌ Token expirado: {e}")
         def error_stream():
-            error_data = {"error": "Token expirou!"}
+            error_data = {"error": "Token expirou! Por favor, faça login novamente."}
             yield "data: " + json.dumps(error_data) + "\n\n"
         return Response(error_stream(), mimetype='text/event-stream')
-    except jwt.InvalidTokenError:
+    except jwt.InvalidTokenError as e:
+        print(f"❌ Token inválido: {e}")
         def error_stream():
-            error_data = {"error": "Token é inválido!"}
+            error_data = {"error": "Token é inválido! Por favor, faça login novamente."}
             yield "data: " + json.dumps(error_data) + "\n\n"
         return Response(error_stream(), mimetype='text/event-stream')
 
@@ -207,16 +212,32 @@ def authenticate():
         username = data.get('username')
         password = data.get('password')
         
+        print(f"🔐 Tentativa de login para usuário: {username}")
+        
         valid_username = os.environ.get('ADMIN_USERNAME', 'admin')
         valid_password = os.environ.get('ADMIN_PASSWORD', 'boticario2024')
         
+        print(f"🔍 Usuário válido configurado: {valid_username}")
+        
         if username == valid_username and password == valid_password:
+            # Token com validade de 24 horas
+            exp_time = datetime.utcnow() + timedelta(hours=24)
             token = jwt.encode({
                 'username': username,
-                'exp': datetime.utcnow() + timedelta(hours=24)
+                'exp': exp_time
             }, app.config['SECRET_KEY'], algorithm="HS256")
-            return jsonify({"status": "success", "token": token})
+            
+            print(f"✅ Login bem-sucedido para {username}")
+            print(f"🔑 Token gerado com SECRET_KEY: {app.config['SECRET_KEY'][:10]}...")
+            print(f"⏰ Token expira em: {exp_time}")
+            
+            return jsonify({
+                "status": "success", 
+                "token": token,
+                "expires": exp_time.isoformat()
+            })
         else:
+            print(f"❌ Credenciais inválidas para usuário: {username}")
             return jsonify({"status": "error", "message": "Credenciais inválidas"}), 401
     except Exception as e:
         print(f"❌ Erro na autenticação: {e}")
