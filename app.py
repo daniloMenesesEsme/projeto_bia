@@ -1,30 +1,42 @@
 #!/usr/bin/env python3
 """
-Arquivo principal para Railway - importa a aplicação Flask
-IMPORTANTE: Este arquivo NÃO deve ser executado diretamente em produção!
-Use o Procfile: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 app:app
+SOLUÇÃO DRÁSTICA: Forçar Gunicorn diretamente já que Railway ignora Procfile
 """
 import os
 import sys
+import subprocess
 
-# Adicionar o diretório web_app ao path
+# Se estamos em produção (Railway), forçar Gunicorn
+if os.environ.get('PORT') or os.environ.get('RAILWAY_ENVIRONMENT'):
+    print("🚀 PRODUÇÃO DETECTADA - FORÇANDO GUNICORN!")
+    
+    port = os.environ.get('PORT', '5001')
+    cmd = [
+        'gunicorn', 
+        '--bind', f'0.0.0.0:{port}',
+        '--workers', '2',
+        '--timeout', '30',
+        '--access-logfile', '-',
+        '--error-logfile', '-',
+        'app:app'
+    ]
+    
+    print(f"🔧 Executando: {' '.join(cmd)}")
+    
+    # Adicionar web_app ao path antes de executar
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'web_app'))
+    
+    # Executar Gunicorn diretamente
+    os.execvp('gunicorn', cmd)
+
+# Código para desenvolvimento local e importação
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'web_app'))
 
 try:
-    # Importar a aplicação Flask
     from web_app.app import app
     print("✅ Aplicação Flask importada com sucesso!")
-    
-    # FORÇAR GUNICORN EM PRODUÇÃO
-    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production' or os.environ.get('PORT'):
-        print("🚨 ERRO: Não execute este arquivo diretamente em produção!")
-        print("🚨 Use o Procfile: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 app:app")
-        print("🚨 Railway deve usar o Procfile, não python app.py")
-        sys.exit(1)
-    
 except ImportError as e:
     print(f"❌ Erro ao importar aplicação: {e}")
-    # Criar uma aplicação de fallback
     from flask import Flask
     app = Flask(__name__)
     
@@ -32,12 +44,8 @@ except ImportError as e:
     def fallback():
         return "Erro: Aplicação principal não pôde ser carregada. Verifique os logs."
 
-# Para desenvolvimento local APENAS
+# Para desenvolvimento local
 if __name__ == '__main__':
-    if os.environ.get('RAILWAY_ENVIRONMENT') == 'production':
-        print("🚨 NÃO EXECUTE EM PRODUÇÃO! Use Gunicorn via Procfile!")
-        sys.exit(1)
-        
     port = int(os.environ.get('PORT', 5001))
     print(f"🛠️ Iniciando Flask app em DESENVOLVIMENTO na porta {port}")
     app.run(host='0.0.0.0', port=port, debug=True)

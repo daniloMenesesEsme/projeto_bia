@@ -1,1 +1,1 @@
-web: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 30 app:app
+web: python -c "import os; os.system('gunicorn --bind 0.0.0.0:' + str(os.environ.get('PORT', 5001)) + ' --workers 2 --timeout 30 app:app')"
