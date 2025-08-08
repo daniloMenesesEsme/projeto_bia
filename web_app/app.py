@@ -159,8 +159,30 @@ def health_check():
     })
 
 @app.route('/chat', methods=['GET'])
-@token_required
-def chat(current_user):
+def chat():
+    # Verificar token via query parameter (EventSource não suporta headers)
+    token = request.args.get('token')
+    
+    if not token:
+        def error_stream():
+            error_data = {"error": "Token é obrigatório via query parameter."}
+            yield "data: " + json.dumps(error_data) + "\n\n"
+        return Response(error_stream(), mimetype='text/event-stream')
+    
+    try:
+        data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
+        current_user = data['username']
+    except jwt.ExpiredSignatureError:
+        def error_stream():
+            error_data = {"error": "Token expirou!"}
+            yield "data: " + json.dumps(error_data) + "\n\n"
+        return Response(error_stream(), mimetype='text/event-stream')
+    except jwt.InvalidTokenError:
+        def error_stream():
+            error_data = {"error": "Token é inválido!"}
+            yield "data: " + json.dumps(error_data) + "\n\n"
+        return Response(error_stream(), mimetype='text/event-stream')
+
     if not chatbot_pronto:
         def error_stream():
             error_data = {"error": "O Chatbot ainda não está pronto."}

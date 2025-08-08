@@ -74,11 +74,7 @@ function Chat({ username, token }) {
     setNewMessage('');
     setIsLoading(true);
 
-    const eventSource = new EventSource(`${API_BASE_URL}/chat?message=${encodeURIComponent(newMessage)}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
+    const eventSource = new EventSource(`${API_BASE_URL}/chat?message=${encodeURIComponent(newMessage)}&token=${encodeURIComponent(token)}`);
 
     eventSource.onmessage = function(event) {
       const data = JSON.parse(event.data);
