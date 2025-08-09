@@ -33,6 +33,9 @@ try:
     
     from chatbot.chatbot import inicializar_chatbot, get_chatbot_answer_stream
     print("✅ Módulo chatbot importado com sucesso")
+    
+    # Adicionado: Importa a função de criação de índice
+    from criar_indice_estruturado import criar_e_salvar_indice_estruturado
 
 except ImportError as e:
     print(f"⚠️ Erro ao importar chatbot: {e}")
@@ -44,7 +47,12 @@ except ImportError as e:
     
     def get_chatbot_answer_stream(pergunta):
         print(f"⚠️ Função mock: get_chatbot_answer_stream - {pergunta}")
-        yield "data: " + json.dumps({"answer": "Serviço em manutenção. Por favor, tente novamente mais tarde."}) + "\n\n"
+        yield "data: " + json.dumps({"answer": "Serviço em manutenção. Por favor, tente novamente mais tarde."}}) + "\n\n"
+        
+    # Adicionado: Mock para a função de criação de índice
+    def criar_e_salvar_indice_estruturado():
+        print("⚠️ Função mock: criar_e_salvar_indice_estruturado")
+        pass
 
 # Inicializa o Flask
 app = Flask(__name__)
@@ -63,13 +71,15 @@ def verificar_e_processar_dados():
         faiss_index_path = os.path.join(os.path.dirname(__file__), 'faiss_index_estruturado')
         
         if not os.path.exists(base_conhecimento_path) or not os.path.exists(faiss_index_path):
-            print("🔧 Primeira execução: Processando dados...")
-            return True  # Retorna True mesmo sem processar para ambiente de produção
+            print("🔧 Primeira execução ou índice não encontrado: Processando dados...")
+            # Chama a função para criar o índice
+            criar_e_salvar_indice_estruturado()
             
         return True
     except Exception as e:
-        print(f"⚠️ Erro ao verificar dados: {e}")
-        return True  # Retorna True mesmo com erro para não bloquear a inicialização
+        print(f"⚠️ Erro ao verificar e processar dados: {e}")
+        return False # Retorna False para indicar que a inicialização falhou
+
 
 # Inicialização para produção
 print("--- Iniciando Servidor Flask e Chatbot ---")

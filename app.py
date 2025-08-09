@@ -10,7 +10,8 @@ def install_requirements():
     """Instala requirements se necessário"""
     try:
         print("🔧 Verificando e instalando dependências...")
-        result = subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', 'requirements.txt'], 
+                requirements_path = os.path.join(os.path.dirname(__file__), 'web_app', 'requirements.txt')
+        result = subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', requirements_path], 
                               capture_output=True, text=True)
         
         if result.returncode == 0:

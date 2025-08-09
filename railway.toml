@@ -1,0 +1,7 @@
+
+[build]
+builder = "python"
+
+[deploy]
+startCommand = "python app.py"
+watchPatterns = ["web_app/"]

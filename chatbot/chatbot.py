@@ -29,7 +29,7 @@ def inicializar_chatbot():
             return False
         genai.configure(api_key=api_key)
 
-        caminho_indice = os.path.join(os.path.dirname(__file__), "..", "web_app", "faiss_index_estruturado")
+                caminho_indice = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "web_app", "faiss_index_estruturado"))
 
         if not os.path.isdir(caminho_indice):
             print(f"Erro: O diretório do índice '{caminho_indice}' não foi encontrado.")
