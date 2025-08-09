@@ -3,7 +3,7 @@ builder = "nixpacks"
 buildCommand = "pwd && ls -la && pip install -r requirements.txt && cp -r ../chatbot . && chmod +x railway_start.sh && ls -la && echo 'Conteúdo do diretório chatbot:' && ls -la chatbot/"
 
 [deploy]
-startCommand = "./railway_start.sh"
+startCommand = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 60 wsgi:app"
 healthcheckPath = "/"
 healthcheckTimeout = 100
 restartPolicyType = "on_failure"
