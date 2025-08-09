@@ -10,7 +10,7 @@ function Chat({ username, token }) {
   const [isLoading, setIsLoading] = useState(false);
   const messageListRef = useRef(null);
   
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://javisgb-production.up.railway.app';
 
   useEffect(() => {
     if (messageListRef.current) {
