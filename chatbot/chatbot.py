@@ -7,12 +7,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough, RunnableParallel
 from langchain_core.output_parsers import StrOutputParser
-import json
-import logging
-
-# Configurar logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import json # Adicionado: Importa o módulo json
 
 # Cache para armazenar a cadeia de QA
 qa_chain_cache = None
@@ -30,24 +25,22 @@ def inicializar_chatbot():
     try:
         api_key = os.environ.get("GOOGLE_API_KEY")
         if not api_key:
-            logger.error("❌ Erro: A chave de API do Google (GOOGLE_API_KEY) não foi definida.")
+            print("Erro: A chave de API do Google (GOOGLE_API_KEY) não foi definida.")
             return False
-        
-        logger.info("🔑 Configurando API do Google...")
         genai.configure(api_key=api_key)
 
         caminho_indice = os.path.join(os.path.dirname(__file__), "..", "web_app", "faiss_index_estruturado")
 
         if not os.path.isdir(caminho_indice):
-            logger.error(f"❌ Erro: O diretório do índice '{caminho_indice}' não foi encontrado.")
+            print(f"Erro: O diretório do índice '{caminho_indice}' não foi encontrado.")
             return False
 
-        logger.info("🔍 Carregando índice FAISS...")
+        print("Carregando índice FAISS...")
         embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         vectorstore = FAISS.load_local(caminho_indice, embeddings, allow_dangerous_deserialization=True)
         retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
 
-        logger.info("🤖 Criando a cadeia de QA com LCEL para retornar fontes...")
+        print("Criando a cadeia de QA com LCEL para retornar fontes...")
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.02, streaming=True)
         
         prompt_template = """Você é um assistente especializado em artigos técnicos do Grupo Boticário para orientação de franqueados.
@@ -105,29 +98,39 @@ def inicializar_chatbot():
         2. **Configuração:** [Consolidar ajustes técnicos]
         3. **Teste:** [Consolidar validações]
         
-        ### **🛠️ SOLUÇÃO AVANÇADA (3º Nível)**
-        1. **Manutenção:** [Consolidar procedimentos de manutenção]
-        2. **Substituição:** [Consolidar processos de substituição]
+        ### **📞 ESCALAÇÃO (3º Nível)**
+        **Para AERO:** [Consolidar procedimentos específicos AERO]
+        **Para Franquias:** [Consolidar orientações gerais]
         
-        ## 5. Prevenção:
-        **📋 CHECKLIST DE PREVENÇÃO:**
-        - [Consolidar ações preventivas similares]
-        - [Agrupar verificações periódicas]
+        **⚡ Tempo Estimado:** [Indicar tempo para otimizar TMA]
+        **📋 Categorização:** [Macro/Submotivo para classificação]
         
-        **CONTEXTO DISPONÍVEL:**
+        ### **Informações Adicionais:**
+        [Qualquer informação técnica relevante encontrada no contexto]
+        
+        **OTIMIZAÇÃO TMA/TME - REGRAS OBRIGATÓRIAS:**
+        - MÁXIMO 5 causas consolidadas (elimine repetições)
+        - MÁXIMO 6 soluções priorizadas (do mais rápido ao mais complexo)
+        - AGRUPE informações similares em categorias
+        - USE terminologia consistente (evite variações)
+        - INDIQUE tempo estimado para cada solução
+        - PRIORIZE soluções por eficácia comprovada
+        - ELIMINE informações redundantes entre artigos
+        
+        **CONSOLIDAÇÃO INTELIGENTE:** Se encontrar 10 causas similares, agrupe em 3 categorias principais.
+        **FOCO NO RESULTADO:** Analista deve ter resposta clara em máximo 2 minutos de leitura.
+
+        **Contexto Disponível:**
         {context}
-        
-        **PERGUNTA DO USUÁRIO:**
+
+        **Pergunta do Analista:**
         {question}
-        
-        **RESPOSTA CONSOLIDADA:**"""
 
-        prompt = PromptTemplate(
-            input_variables=["context", "question"],
-            template=prompt_template
-        )
+        **Resposta Estruturada:**
+        """
+        prompt = PromptTemplate(template=prompt_template, input_variables=["context", "question"])
 
-        # Define a cadeia RAG que processa os documentos
+        # Define a cadeia que formata o input para o LLM
         rag_chain_from_docs = (
             RunnablePassthrough.assign(context=(lambda x: format_docs(x["source_documents"])))
             | prompt
@@ -143,11 +146,11 @@ def inicializar_chatbot():
             }
         ).assign(answer=rag_chain_from_docs)
         
-        logger.info("✅ Chatbot inicializado com sucesso para streaming!")
+        print("Chatbot inicializado com sucesso para streaming!")
         return True
 
     except Exception as e:
-        logger.error(f"❌ Ocorreu um erro durante a inicialização do chatbot: {e}")
+        print(f"Ocorreu um erro durante a inicialização do chatbot: {e}")
         return False
 
 def get_chatbot_answer_stream(question):
@@ -155,12 +158,10 @@ def get_chatbot_answer_stream(question):
     Recebe uma pergunta e retorna um gerador para a resposta e as fontes.
     """
     if qa_chain_cache is None:
-        logger.error("❌ O chatbot não foi inicializado corretamente.")
         yield "data: " + json.dumps({"error": "O chatbot não foi inicializado corretamente." }) + "\n\n"
         return
 
     try:
-        logger.info(f"🔍 Processando pergunta: {question[:100]}...")
         stream = qa_chain_cache.stream(question)
         
         # O primeiro chunk pode conter as fontes e/ou o início da resposta
@@ -178,8 +179,6 @@ def get_chatbot_answer_stream(question):
                 })
                 seen_sources.add(source_file)
         
-        logger.info(f"📚 Encontradas {len(unique_sources)} fontes únicas")
-        
         # Envia as fontes primeiro
         yield "data: " + json.dumps({"sources": unique_sources}) + "\n\n"
 
@@ -194,7 +193,7 @@ def get_chatbot_answer_stream(question):
 
     except Exception as e:
         error_message = f"Ocorreu um erro ao processar a pergunta: {e}"
-        logger.error(f"❌ {error_message}")
+        print(error_message)
         yield "data: " + json.dumps({"error": error_message}) + "\n\n"
 
 # Bloco de teste atualizado

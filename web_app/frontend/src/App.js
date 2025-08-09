@@ -4,16 +4,16 @@ import Chat from './Chat';
 import './App.css';
 
 function App() {
-  const [auth, setAuth] = useState({ username: null, token: null });
+  const [username, setUsername] = useState(null);
 
-  const handleLogin = (username, token) => {
-    setAuth({ username, token });
+  const handleLogin = (user) => {
+    setUsername(user);
   };
 
   return (
     <div className="App">
-      {auth.token ? (
-        <Chat username={auth.username} token={auth.token} />
+      {username ? (
+        <Chat username={username} />
       ) : (
         <Login onLogin={handleLogin} />
       )}

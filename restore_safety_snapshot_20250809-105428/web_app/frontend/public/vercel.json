@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://spectacular-embrace-production.up.railway.app/api/:path*" },
+    { "source": "/chat", "destination": "https://spectacular-embrace-production.up.railway.app/chat" },
+    { "source": "/health", "destination": "https://spectacular-embrace-production.up.railway.app/health" }
+  ]
+}
+

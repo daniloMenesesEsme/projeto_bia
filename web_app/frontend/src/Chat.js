@@ -1,24 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { EventSource } from 'eventsource'; 
 import './Chat.css';
 
-function Chat({ username, token }) {
+function Chat({ username }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messageListRef = useRef(null);
   
-  // Usar caminho relativo; Vercel fará o rewrite para o backend do Railway
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'spectacular-embrace-production.up.railway.app';
+  // URL base do backend - adaptável para diferentes ambientes
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
+  // Auto-scroll to bottom of message list
   useEffect(() => {
     if (messageListRef.current) {
       messageListRef.current.scrollTop = messageListRef.current.scrollHeight;
     }
   }, [messages]);
 
+  // Check backend connection status
   useEffect(() => {
     const checkConnection = async () => {
       try {
@@ -43,10 +44,7 @@ function Chat({ username, token }) {
     try {
       await fetch(`${API_BASE_URL}/feedback`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           question: userQuestion,
           answer: message.text,
@@ -54,6 +52,7 @@ function Chat({ username, token }) {
         }),
       });
 
+      // Update message state to reflect that feedback was given
       setMessages(prev =>
         prev.map(msg =>
           msg.id === messageId ? { ...msg, feedback: feedbackType } : msg
@@ -75,7 +74,7 @@ function Chat({ username, token }) {
     setNewMessage('');
     setIsLoading(true);
 
-    const eventSource = new EventSource(`${API_BASE_URL}/chat?message=${encodeURIComponent(newMessage)}&token=${encodeURIComponent(token)}`);
+    const eventSource = new EventSource(`${API_BASE_URL}/chat?message=${encodeURIComponent(newMessage)}`);
 
     eventSource.onmessage = function(event) {
       const data = JSON.parse(event.data);
@@ -89,49 +88,43 @@ function Chat({ username, token }) {
           currentBotMessage.text = `Erro: ${data.error}`;
           eventSource.close();
           setIsLoading(false);
-          
-          // Se for erro de token, sugerir recarregar página
-          if (data.error.includes('Token') || data.error.includes('login')) {
-            setTimeout(() => {
-              if (window.confirm("Sua sessão expirou. Deseja recarregar a página para fazer login novamente?")) {
-                window.location.reload();
-              }
-            }, 2000);
-          }
         } else {
           if (data.sources) currentBotMessage.sources = data.sources;
           if (data.token) {
             currentBotMessage.text += data.token;
+            // Se a resposta parece estar completa, feche a conexão
+            if (data.token.includes('---') || data.token.endsWith('\n\n')) {
+              setTimeout(() => {
+                eventSource.close();
+                setIsLoading(false);
+              }, 1000);
+            }
           }
         }
         return updatedMessages;
       });
     };
-    
-    eventSource.addEventListener('end', function() {
-        eventSource.close();
-        setIsLoading(false);
-    });
 
     eventSource.onerror = function(err) {
       console.error("EventSource failed:", err);
       setMessages(prev => {
           const lastMsg = prev[prev.length - 1];
-          if (lastMsg && (!lastMsg.text || lastMsg.text === '')) {
-            lastMsg.text = "Erro de conexão com o servidor. Verifique se você está logado e tente novamente.";
+          if (!lastMsg.text || lastMsg.text === '') {
+            lastMsg.text = "Erro de conexão com o servidor de streaming.";
           }
-          return [...prev];
+          return [...prev.slice(0, -1), lastMsg];
       });
       eventSource.close();
       setIsLoading(false);
-      
-      // Se o erro for de autenticação, sugerir novo login
-      if (err.target && err.target.readyState === EventSource.CLOSED) {
-        setTimeout(() => {
-          alert("Sua sessão pode ter expirado. Por favor, recarregue a página e faça login novamente.");
-        }, 2000);
-      }
     };
+
+    // Timeout para fechar a conexão após resposta completa
+    setTimeout(() => {
+      if (eventSource.readyState !== EventSource.CLOSED) {
+        eventSource.close();
+        setIsLoading(false);
+      }
+    }, 30000); // 30 segundos timeout
   };
 
   return (
@@ -147,6 +140,7 @@ function Chat({ username, token }) {
                 height="24" 
                 style={{borderRadius: '4px'}}
                 onError={(e) => {
+                  // Fallback se não encontrar o PNG
                   e.target.outerHTML = '<span style="font-size: 24px;">🏪</span>';
                 }}
               />
