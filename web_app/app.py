@@ -47,7 +47,7 @@ except ImportError as e:
     
     def get_chatbot_answer_stream(pergunta):
         print(f"⚠️ Função mock: get_chatbot_answer_stream - {pergunta}")
-        yield "data: " + json.dumps({"answer": "Serviço em manutenção. Por favor, tente novamente mais tarde."}}) + "\n\n"
+        yield "data: " + json.dumps({"answer": "Serviço em manutenção. Por favor, tente novamente mais tarde."}) + "\n\n"
         
     # Adicionado: Mock para a função de criação de índice
     def criar_e_salvar_indice_estruturado():
