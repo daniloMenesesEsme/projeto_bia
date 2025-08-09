@@ -4,5 +4,5 @@ builder = "nixpacks"
 dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "gunicorn web_app.app:app"
+startCommand = "gunicorn --bind 0.0.0.0:$PORT --workers 1 --timeout 60 app:app"
 watchPatterns = ["web_app/"]
