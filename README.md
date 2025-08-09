@@ -1,4 +1,4 @@
-# 🤖 Chatbot de Conhecimento - Grupo Boticário
+# 🤖 Porjeto IA Chatbot BIA - Grupo Boticário
 
 Sistema de chatbot inteligente para orientação de franqueados do Grupo Boticário, baseado em artigos técnicos e documentação.
 
