@@ -1,4 +1,7 @@
 
+[build]
+rootDirectory = "web_app"
+
 [deploy]
 startCommand = "python app.py"
 watchPatterns = ["web_app/"]
