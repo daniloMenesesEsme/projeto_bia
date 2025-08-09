@@ -4,5 +4,5 @@ builder = "nixpacks"
 dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "python web_app/app.py"
+startCommand = "gunicorn web_app.app:app"
 watchPatterns = ["web_app/"]
