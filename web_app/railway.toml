@@ -1,8 +1,10 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pip install -r requirements.txt && cp -r ../chatbot ."
+buildCommand = "pip install -r requirements.txt && cp -r ../chatbot . && chmod +x railway_start.sh"
 
 [deploy]
-startCommand = "gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 60"
+startCommand = "./railway_start.sh"
 healthcheckPath = "/"
 healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3

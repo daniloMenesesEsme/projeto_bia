@@ -11,13 +11,29 @@ from dotenv import load_dotenv
 # Carrega variáveis de ambiente
 load_dotenv()
 
-# Configura o PYTHONPATH
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Configura o PYTHONPATH e imprime para debug
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
+print(f"🔍 PYTHONPATH atual: {sys.path}")
+print(f"📂 Diretório atual: {os.getcwd()}")
+print(f"📂 Conteúdo do diretório:")
+for item in os.listdir(os.getcwd()):
+    print(f"  - {item}")
 
-# Importa as funções do chatbot com fallback
+
+# Importa as funções do chatbot com fallback e mais logs
 try:
+    print("🔄 Tentando importar módulo chatbot...")
+    chatbot_path = os.path.join(os.getcwd(), 'chatbot')
+    print(f"📂 Verificando diretório chatbot: {chatbot_path}")
+    if os.path.exists(chatbot_path):
+        print(f"✅ Diretório chatbot encontrado em: {chatbot_path}")
+    else:
+        print(f"⚠️ Diretório chatbot não encontrado em: {chatbot_path}")
+    
     from chatbot.chatbot import inicializar_chatbot, get_chatbot_answer_stream
     print("✅ Módulo chatbot importado com sucesso")
+
 except ImportError as e:
     print(f"⚠️ Erro ao importar chatbot: {e}")
     print("⚠️ Criando funções mock para inicialização...")
