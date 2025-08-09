@@ -16,10 +16,21 @@ else
     cp -r ../chatbot .
     if [ -d "chatbot" ]; then
         echo "✅ Diretório chatbot copiado com sucesso"
+        echo "📂 Conteúdo do diretório chatbot após cópia:"
+        ls -la chatbot/
     else
         echo "❌ Falha ao copiar diretório chatbot"
+        echo "📂 Verificando diretório pai:"
+        ls -la ../
     fi
-fi
+ fi
+
+# Adiciona o diretório atual ao PYTHONPATH
+export PYTHONPATH="${PYTHONPATH:+${PYTHONPATH}:}$(pwd)"
+echo "🐍 PYTHONPATH configurado: $PYTHONPATH"
+
+# Verifica se o módulo chatbot pode ser importado
+python3 -c "import chatbot; print('✅ Módulo chatbot importado com sucesso!')" || echo "❌ Erro ao importar módulo chatbot"
 
 # Verifica variáveis de ambiente críticas
 echo "🔐 Verificando variáveis de ambiente..."
