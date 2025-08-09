@@ -13,8 +13,17 @@ from functools import wraps
 app = Flask(__name__)
 
 # Configuração básica
-CORS(app, origins=["https://javisgb.vercel.app", "http://localhost:3000"])
+CORS(app, origins=["https://javisgb.vercel.app", "http://localhost:3000"], supports_credentials=True)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma-chave-secreta-muito-forte-boticario-2024')
+
+# Headers CORS explícitos
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://javisgb.vercel.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    return response
 
 # Autenticação JWT
 def token_required(f):
