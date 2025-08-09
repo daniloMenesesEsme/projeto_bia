@@ -12,9 +12,9 @@ from functools import wraps
 
 app = Flask(__name__)
 
-# Configuração CORS mais permissiva para teste
+# Configuração CORS totalmente aberta (temporária para teste)
 CORS(app, 
-     origins=["https://javisgb.vercel.app", "http://localhost:3000"],
+     origins="*",
      methods=['GET', 'POST', 'OPTIONS'],
      allow_headers=['Content-Type', 'Authorization'],
      supports_credentials=True)
@@ -24,9 +24,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'uma-chave-secreta-muito
 # Headers CORS explícitos para garantir
 @app.after_request
 def after_request(response):
-    origin = request.headers.get('Origin')
-    if origin in ["https://javisgb.vercel.app", "http://localhost:3000"]:
-        response.headers.add('Access-Control-Allow-Origin', origin)
+    origin = request.headers.get('Origin', '*')
+    response.headers.add('Access-Control-Allow-Origin', origin or '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
@@ -36,7 +35,7 @@ def after_request(response):
 @app.route('/api/auth', methods=['OPTIONS'])
 def auth_options():
     response = jsonify({'status': 'ok'})
-    response.headers.add('Access-Control-Allow-Origin', 'https://javisgb.vercel.app')
+    response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin', '*'))
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
     response.headers.add('Access-Control-Allow-Credentials', 'true')
