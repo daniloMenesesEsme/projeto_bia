@@ -6,7 +6,8 @@ function Login({ onLogin }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://javisgb-production.up.railway.app';
+  // Usa o mesmo domínio do frontend por padrão; Vercel fará o proxy via vercel.json
+  const API_BASE_URL = process.env.REACT_APP_API_URL || '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
