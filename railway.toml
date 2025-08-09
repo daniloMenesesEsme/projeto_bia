@@ -1,7 +1,8 @@
 
 [build]
-rootDirectory = "web_app"
+builder = "nixpacks"
+dockerfile = "Dockerfile"
 
 [deploy]
-startCommand = "python app.py"
+startCommand = "python web_app/app.py"
 watchPatterns = ["web_app/"]
