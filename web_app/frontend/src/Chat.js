@@ -10,7 +10,8 @@ function Chat({ username, token }) {
   const [isLoading, setIsLoading] = useState(false);
   const messageListRef = useRef(null);
   
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://javisgb-production.up.railway.app';
+  // Usar caminho relativo; Vercel fará o rewrite para o backend do Railway
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'spectacular-embrace-production.up.railway.app';
 
   useEffect(() => {
     if (messageListRef.current) {
