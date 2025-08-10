@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { API_BASE_URL } from './config';
 import './Chat.css';
 
 function Chat({ username }) {
@@ -8,9 +9,6 @@ function Chat({ username }) {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messageListRef = useRef(null);
-  
-  // URL base do backend - adaptável para diferentes ambientes
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://web-production-a660a.up.railway.app';
 
   // Auto-scroll to bottom of message list
   useEffect(() => {
