@@ -58,8 +58,12 @@ except ImportError as e:
 app = Flask(__name__)
 
 # Configura CORS
-CORS_ORIGIN = os.getenv('CORS_ORIGIN', '*')
-CORS(app, resources={r"/*": {"origins": CORS_ORIGIN}})
+CORS_ORIGIN = os.getenv('CORS_ORIGIN', 'https://projeto-bia.vercel.app')
+CORS(app, resources={r"/*": {
+    "origins": [CORS_ORIGIN],
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type"]
+}})
 
 chatbot_pronto = False
 FEEDBACK_FILE = os.path.join(os.path.dirname(__file__), 'feedback.csv')

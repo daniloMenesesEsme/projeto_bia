@@ -10,7 +10,7 @@ function Chat({ username }) {
   const messageListRef = useRef(null);
   
   // URL base do backend - adaptável para diferentes ambientes
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://web-production-a660a.up.railway.app';
 
   // Auto-scroll to bottom of message list
   useEffect(() => {
