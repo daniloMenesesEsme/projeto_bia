@@ -72,57 +72,42 @@ function Chat({ username }) {
     setNewMessage('');
     setIsLoading(true);
 
-    const eventSource = new EventSource(`${API_BASE_URL}/chat?message=${encodeURIComponent(newMessage)}`);
-
-    eventSource.onmessage = function(event) {
-      const data = JSON.parse(event.data);
+    try {
+      const response = await fetch(`${API_BASE_URL}/chat?message=${encodeURIComponent(newMessage)}`);
+      const responseText = await response.text();
+      
+      // Parse da resposta que vem no formato "data: {json}"
+      let botResponse = "Erro ao processar resposta.";
+      let sources = [];
+      
+      if (responseText.startsWith('data: ')) {
+        const jsonPart = responseText.substring(6); // Remove "data: "
+        const data = JSON.parse(jsonPart);
+        botResponse = data.answer || data.error || "Resposta não encontrada.";
+        sources = data.sources || [];
+      }
 
       setMessages(prev => {
         const lastMsgIndex = prev.length - 1;
         const updatedMessages = [...prev];
         const currentBotMessage = updatedMessages[lastMsgIndex];
-
-        if (data.error) {
-          currentBotMessage.text = `Erro: ${data.error}`;
-          eventSource.close();
-          setIsLoading(false);
-        } else {
-          if (data.sources) currentBotMessage.sources = data.sources;
-          if (data.token) {
-            currentBotMessage.text += data.token;
-            // Se a resposta parece estar completa, feche a conexão
-            if (data.token.includes('---') || data.token.endsWith('\n\n')) {
-              setTimeout(() => {
-                eventSource.close();
-                setIsLoading(false);
-              }, 1000);
-            }
-          }
-        }
+        
+        currentBotMessage.text = botResponse;
+        currentBotMessage.sources = sources;
+        
         return updatedMessages;
       });
-    };
-
-    eventSource.onerror = function(err) {
-      console.error("EventSource failed:", err);
+      
+    } catch (error) {
+      console.error("Erro ao enviar mensagem:", error);
       setMessages(prev => {
-          const lastMsg = prev[prev.length - 1];
-          if (!lastMsg.text || lastMsg.text === '') {
-            lastMsg.text = "Erro de conexão com o servidor de streaming.";
-          }
-          return [...prev.slice(0, -1), lastMsg];
+        const lastMsg = prev[prev.length - 1];
+        lastMsg.text = "Erro de conexão com o servidor.";
+        return [...prev.slice(0, -1), lastMsg];
       });
-      eventSource.close();
+    } finally {
       setIsLoading(false);
-    };
-
-    // Timeout para fechar a conexão após resposta completa
-    setTimeout(() => {
-      if (eventSource.readyState !== EventSource.CLOSED) {
-        eventSource.close();
-        setIsLoading(false);
-      }
-    }, 30000); // 30 segundos timeout
+    }
   };
 
   return (
