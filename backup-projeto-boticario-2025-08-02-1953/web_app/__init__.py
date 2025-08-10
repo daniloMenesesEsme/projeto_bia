@@ -1,1 +1,0 @@
-# Este arquivo torna web_app um módulo Python válido

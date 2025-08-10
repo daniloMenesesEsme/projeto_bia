@@ -1,1 +1,0 @@
-fix(frontend): Corrige layout do chat e ordem de importação do CSS
