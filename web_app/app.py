@@ -92,7 +92,9 @@ try:
     else:
         print("!!! Aviso: Falha ao inicializar o chatbot !!!")
 except Exception as e:
-    print(f"!!! Erro ao inicializar chatbot: {e} !!!")
+    import traceback
+    print(f"!!! ERRO CRÍTICO AO INICIALIZAR CHATBOT: {e} !!!")
+    traceback.print_exc() # This will print the full stack trace
     print("!!! Servidor vai iniciar sem chatbot - apenas para debug !!!")
     chatbot_pronto = True  # Alterado para True para permitir testes
 
