@@ -14,10 +14,10 @@ load_dotenv()
 # Configura o PYTHONPATH e imprime para debug
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(project_root)
-print(f"🔍 PYTHONPATH atual: {sys.path}")
-print(f"📂 Diretório atual: {os.getcwd()}")
-print(f"📂 Conteúdo do diretório:")
-for item in os.listdir(os.getcwd()):
+print("🔍 PYTHONPATH atual:", sys.path)
+print("📂 Diretório atual:", os.getcwd())
+print("📂 Conteúdo do diretório:")
+for item in os.listdir('.'):
     print(f"  - {item}")
 
 
@@ -38,7 +38,7 @@ try:
     from criar_indice_estruturado import criar_e_salvar_indice_estruturado
 
 except ImportError as e:
-    print(f"⚠️ Erro ao importar chatbot: {e}")
+    print(f"❌ ERRO ao importar chatbot: {e}")
     print("⚠️ Criando funções mock para inicialização...")
     
     def inicializar_chatbot():
