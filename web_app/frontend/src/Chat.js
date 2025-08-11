@@ -76,15 +76,44 @@ function Chat({ username }) {
       const response = await fetch(`${API_BASE_URL}/chat?message=${encodeURIComponent(newMessage)}`);
       const responseText = await response.text();
       
-      // Parse da resposta que vem no formato "data: {json}"
-      let botResponse = "Erro ao processar resposta.";
+      // Processa múltiplas mensagens SSE
+      let botResponse = "";
       let sources = [];
+      let hasError = false;
       
-      if (responseText.startsWith('data: ')) {
-        const jsonPart = responseText.substring(6); // Remove "data: "
-        const data = JSON.parse(jsonPart);
-        botResponse = data.answer || data.error || "Resposta não encontrada.";
-        sources = data.sources || [];
+      // Divide a resposta em linhas e processa cada "data: {json}"
+      const lines = responseText.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const jsonPart = line.substring(6); // Remove "data: "
+            if (jsonPart.trim()) {
+              const data = JSON.parse(jsonPart);
+              
+              // Processa diferentes tipos de dados SSE
+              if (data.sources) {
+                sources = data.sources;
+              } else if (data.token) {
+                botResponse += data.token;
+              } else if (data.answer) {
+                botResponse = data.answer;
+              } else if (data.error) {
+                botResponse = data.error;
+                hasError = true;
+                break;
+              }
+            }
+          } catch (parseError) {
+            console.error("Erro ao fazer parse de linha SSE:", line, parseError);
+            // Continua processando outras linhas
+          }
+        }
+      }
+      
+      // Se não conseguiu processar nada, usa mensagem padrão
+      if (!botResponse && !hasError) {
+        botResponse = "Resposta não encontrada ou formato inválido.";
       }
 
       setMessages(prev => {
