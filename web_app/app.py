@@ -77,6 +77,10 @@ def home():
         "version": "1.0.0"
     })
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"}), 200
+
 @app.route('/chat', methods=['GET'])
 def chat():
     pergunta = request.args.get('message')

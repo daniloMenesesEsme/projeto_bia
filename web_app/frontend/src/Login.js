@@ -1,23 +1,30 @@
 import React, { useState } from 'react';
-import './Login.css'; // Certifique-se de que este arquivo CSS existe ou crie-o
+import { API_BASE_URL } from './config';
+import './Login.css';
 
 function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
-  // URL base do backend
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
     
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+      
       const response = await fetch(`${API_BASE_URL}/api/auth`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (response.ok) {
         onLogin(username);
@@ -25,12 +32,18 @@ function Login({ onLogin }) {
         setError('Usuário ou senha inválidos.');
       }
     } catch (error) {
-      // Fallback para desenvolvimento (remover em produção)
-      if (username === 'admin' && password === 'boticario2024') {
-        onLogin(username);
+      if (error.name === 'AbortError') {
+        setError('Timeout: Servidor demorou para responder. Tente novamente.');
       } else {
-        setError('Usuário ou senha inválidos.');
+        // Fallback para desenvolvimento (remover em produção)
+        if (username === 'admin' && password === 'boticario2024') {
+          onLogin(username);
+        } else {
+          setError('Erro de conexão. Verifique sua internet.');
+        }
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,7 +90,16 @@ function Login({ onLogin }) {
             required
           />
         </div>
-        <button type="submit">Entrar</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? (
+            <>
+              <span style={{marginRight: '8px'}}>🔄</span>
+              Conectando... (pode demorar 30s)
+            </>
+          ) : (
+            'Entrar'
+          )}
+        </button>
       </form>
     </div>
   );
